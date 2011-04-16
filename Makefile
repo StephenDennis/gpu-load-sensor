@@ -14,11 +14,15 @@
 #  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+CC=gcc
+CFLAGS=-Wall
 INCLUDE=-I /usr/local/cuda/include
 LIB=-ldl
 
+all: cuda_sensor
+
 cuda_sensor: cuda_sensor.c
-	gcc $(INCLUDE) -rdynamic -o cuda_sensor cuda_sensor.c $(LIB)
+	$(CC) $(CFLAGS) $(INCLUDE) -rdynamic -o cuda_sensor cuda_sensor.c $(LIB)
 
 clean:
 	rm -f *.o cuda_sensor
