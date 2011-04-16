@@ -1,5 +1,5 @@
 #/bin/sh
 
-export LD_LIBRARY_PATH=/usr/local/cuda/lib
+export LD_LIBRARY_PATH=/usr/local/cuda/lib64
 
-exec /home/sd/cuda_gridengine/cuda_sensor
+exec ./cuda_sensor
