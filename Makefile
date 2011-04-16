@@ -15,10 +15,10 @@
 #
 
 INCLUDE=-I /usr/local/cuda/include
-LIB=-L /usr/local/cuda/lib -l cudart
+LIB=-ldl
 
 cuda_sensor: cuda_sensor.c
-	gcc $(INCLUDE) -o cuda_sensor cuda_sensor.c $(LIB)
+	gcc $(INCLUDE) -rdynamic -o cuda_sensor cuda_sensor.c $(LIB)
 
 clean:
 	rm -f *.o cuda_sensor

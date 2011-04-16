@@ -19,16 +19,49 @@
 #include <unistd.h>
 #include <driver_types.h>
 #include <cuda_runtime_api.h>
-
-/* 
-TODO:
-    - possible expand the arrays in the device info
-    - add another var that provides the cuda device count
-    - do a dlopen on cuda library
-    - add another var that indicates cuda load failed or succeeded
-*/
+#include <dlfcn.h>
 
 void print_help();
+
+char*load_error="No Error";
+cudaError_t (*my_cudaGetDeviceCount)(int*count);
+cudaError_t (*my_cudaGetDeviceProperties)(struct cudaDeviceProp *prop, int device);
+
+cudaError_t fake_cudaGetDeviceCount(int*count)
+    {
+    *count=0;
+    return cudaErrorNoDevice;
+    }
+cudaError_t fake_cudaGetDeviceProperties(struct cudaDeviceProp *prop, int device)
+    {
+    return cudaErrorNoDevice;
+    }
+
+void load_cuda()
+    {
+    void*handle;
+    my_cudaGetDeviceCount = fake_cudaGetDeviceCount;
+	my_cudaGetDeviceProperties = fake_cudaGetDeviceProperties;
+    handle = dlopen("libcudart.so", RTLD_LAZY);
+    if (!handle) 
+        {
+        load_error=dlerror();
+        return;
+        }
+    char*error;
+    my_cudaGetDeviceCount = dlsym(handle, "cudaGetDeviceCount");
+    if ((error = dlerror()) != NULL) 
+        {
+        load_error=error;
+        return;
+        }
+    my_cudaGetDeviceProperties = dlsym(handle, "cudaGetDeviceProperties");
+    if ((error = dlerror()) != NULL) 
+        {
+        load_error=error;
+        return;
+        }
+    }
 
 int main(int argc, char** argv)
 	{
@@ -36,47 +69,11 @@ int main(int argc, char** argv)
 	cudaError_t e;
 	int count;
 
+    load_cuda();
+
 	if (argc==2 && (0==strcmp("-help",argv[1])))
 		{
         print_help();
-		}
-	else if (argc==2 && (0==strcmp("-human",argv[1])))
-		{
-		int i;
-		e = cudaGetDeviceCount(&count);
-		//printf("GetDeviceCount: error [%d] count [%d]\n",e,count);
-		e = cudaGetDeviceProperties(&prop, 0);
-		//printf("GetDeviceProperties: error [%d]\n",e);
-		for(i=0;i<count;i++)
-			{
-			if(e!=0)
-				{
-				printf("cuda.error                [%d][%d]\n",i,e);
-				}
-			else
-				{
-				printf("cuda.name                     [%d][%s]\n",i,prop.name);
-				printf("cuda.major                    [%d][%d]\n",i,prop.major);
-				printf("cuda.minor                    [%d][%d]\n",i,prop.minor);
-				printf("cuda.totalGlobalMem           [%d][%d]\n",i,(int)prop.totalGlobalMem);
-				printf("cuda.sharedMemPerBlock        [%d][%d]\n",i,(int)prop.sharedMemPerBlock);
-				printf("cuda.regsPerBlock             [%d][%d]\n",i,prop.regsPerBlock);
-				printf("cuda.warpSize                 [%d][%d]\n",i,prop.warpSize);
-				printf("cuda.memPitch                 [%d][%d]\n",i,(int)prop.memPitch);
-				printf("cuda.maxThreadsPerBlock       [%d][%d]\n",i,prop.maxThreadsPerBlock);
-				printf("cuda.maxThreadsDim            [%d][%d]\n",i,prop.maxThreadsDim[0]); /*print array*/
-				printf("cuda.maxGridSize              [%d][%d]\n",i,prop.maxGridSize[0]); /*print array*/
-				printf("cuda.totalConstMem            [%d][%d]\n",i,(int)prop.totalConstMem);
-				printf("cuda.clockRate                [%d][%d]\n",i,prop.clockRate);
-				printf("cuda.textureAlignment         [%d][%d]\n",i,(int)prop.textureAlignment);
-				printf("cuda.deviceOverlap            [%d][%d]\n",i,prop.deviceOverlap);
-				printf("cuda.multiProcessorCount      [%d][%d]\n",i,prop.multiProcessorCount);
-				printf("cuda.kernelExecTimeoutEnabled [%d][%d]\n",i,prop.kernelExecTimeoutEnabled);
-				printf("cuda.integrated               [%d][%d]\n",i,prop.integrated);
-				printf("cuda.canMapHostMemory         [%d][%d]\n",i,prop.canMapHostMemory);
-				printf("cuda.computeNode              [%d][%d]\n",i,prop.computeMode);
-				}
-			}
 		}
 	else
 		{
@@ -89,33 +86,38 @@ int main(int argc, char** argv)
 			int i;
 			if (s && (0==strncmp("quit",s,4)))
 				break;
+			e = my_cudaGetDeviceCount(&count);
+
 			printf("begin\n");
-			e = cudaGetDeviceCount(&count);
-			e = cudaGetDeviceProperties(&prop, 0);
+		    printf("%s:cuda.count:%d\n",h,count);
+		    printf("%s:cuda.error:%d\n",h,e);
+		    printf("%s:cuda.strerror:%s\n",h,load_error);
 			for(i=0;i<count;i++)
-				{
-				printf("%s:cuda.%d.name:%s\n",h,i,prop.name);
-				printf("%s:cuda.%d.major:%d\n",h,i,prop.major);
-				printf("%s:cuda.%d.minor:%d\n",h,i,prop.minor);
-				printf("%s:cuda.%d.totalGlobalMem:%d\n",h,i,(int)prop.totalGlobalMem);
-				printf("%s:cuda.%d.sharedMemPerBlock:%d\n",h,i,(int)prop.sharedMemPerBlock);
-				printf("%s:cuda.%d.regsPerBlock:%d\n",h,i,prop.regsPerBlock);
-				printf("%s:cuda.%d.warpSize:%d\n",h,i,prop.warpSize);
-				printf("%s:cuda.%d.memPitch:%d\n",h,i,(int)prop.memPitch);
-				printf("%s:cuda.%d.maxThreadsPerBlock:%d\n",h,i,prop.maxThreadsPerBlock);
-				printf("%s:cuda.%d.maxThreadsDim:%d\n",h,i,prop.maxThreadsDim[0]); /*maybe todo print array*/
-				printf("%s:cuda.%d.maxGridSize:%d\n",h,i,prop.maxGridSize[0]); /*maybe todo print array*/
-				printf("%s:cuda.%d.totalConstMem:%d\n",h,i,(int)prop.totalConstMem);
-				printf("%s:cuda.%d.clockRate:%d\n",h,i,prop.clockRate);
-				printf("%s:cuda.%d.textureAlignment:%d\n",h,i,(int)prop.textureAlignment);
-				printf("%s:cuda.%d.deviceOverlap:%d\n",h,i,prop.deviceOverlap);
-				printf("%s:cuda.%d.multiProcessorCount:%d\n",h,i,prop.multiProcessorCount);
-				printf("%s:cuda.%d.kernelExecTimeoutEnabled:%d\n",h,i,prop.kernelExecTimeoutEnabled);
-				printf("%s:cuda.%d.integrated:%d\n",h,i,prop.integrated);
-				printf("%s:cuda.%d.canMapHostMemory:%d\n",h,i,prop.canMapHostMemory);
-				printf("%s:cuda.%d.computeNode:%d\n",h,i,prop.computeMode);
-				}
+			 {
+			 e = my_cudaGetDeviceProperties(&prop, i);
+			 printf("%s:cuda.%d.name:%s\n",h,i,prop.name);
+			 printf("%s:cuda.%d.major:%d\n",h,i,prop.major);
+			 printf("%s:cuda.%d.minor:%d\n",h,i,prop.minor);
+			 printf("%s:cuda.%d.totalGlobalMem:%d\n",h,i,(int)prop.totalGlobalMem);
+			 printf("%s:cuda.%d.sharedMemPerBlock:%d\n",h,i,(int)prop.sharedMemPerBlock);
+			 printf("%s:cuda.%d.regsPerBlock:%d\n",h,i,prop.regsPerBlock);
+			 printf("%s:cuda.%d.warpSize:%d\n",h,i,prop.warpSize);
+			 printf("%s:cuda.%d.memPitch:%d\n",h,i,(int)prop.memPitch);
+			 printf("%s:cuda.%d.maxThreadsPerBlock:%d\n",h,i,prop.maxThreadsPerBlock);
+			 printf("%s:cuda.%d.maxThreadsDim:%d\n",h,i,prop.maxThreadsDim[0]); /*maybe todo print array*/
+			 printf("%s:cuda.%d.maxGridSize:%d\n",h,i,prop.maxGridSize[0]); /*maybe todo print array*/
+			 printf("%s:cuda.%d.totalConstMem:%d\n",h,i,(int)prop.totalConstMem);
+			 printf("%s:cuda.%d.clockRate:%d\n",h,i,prop.clockRate);
+			 printf("%s:cuda.%d.textureAlignment:%d\n",h,i,(int)prop.textureAlignment);
+			 printf("%s:cuda.%d.deviceOverlap:%d\n",h,i,prop.deviceOverlap);
+			 printf("%s:cuda.%d.multiProcessorCount:%d\n",h,i,prop.multiProcessorCount);
+			 printf("%s:cuda.%d.kernelExecTimeoutEnabled:%d\n",h,i,prop.kernelExecTimeoutEnabled);
+			 printf("%s:cuda.%d.integrated:%d\n",h,i,prop.integrated);
+			 printf("%s:cuda.%d.canMapHostMemory:%d\n",h,i,prop.canMapHostMemory);
+			 printf("%s:cuda.%d.computeNode:%d\n",h,i,prop.computeMode);
+		     }
 			printf("end\n");
+            fflush(stdout);
 			}
 		}
 	}
@@ -166,6 +168,9 @@ printf(
 "qconf -Mc /tmp/complex_dump\n"
 "}\n"
 "\n"
+"add_int_load_complex cuda.count\n"
+"add_int_load_complex cuda.error\n"
+"add_string_complex cuda.sterror\n"
 "for i in $NUM_CUDA ; do \n"
 "    add_string_complex cuda.$i.name\n"
 "    add_int_load_complex cuda.$i.major\n"
