@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 		while (fgets(s,sizeof(s),stdin) != 0)
 			{
 			int i;
-			if (s && (0==strncmp("quit",s,4)))
+			if (0==strncmp("quit",s,4))
 				break;
 			e = my_cudaGetDeviceCount(&count);
 
