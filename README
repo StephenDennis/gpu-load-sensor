@@ -1,2 +1,94 @@
+About
+-----
+This package contains a Grid Engine Load Sensor for both Cuda and OpenCL.
 
-Some testing performed on GeForce 8400GS (512MB) on Ubuntu 10.10 (Maverick)
+Author
+------
+Stephen Dennis, sd@stephendennis.com
+
+License
+-------
+This package is licensed under GPL.  See COPYING
+
+Use
+---
+need qsub examples!
+
+Building and Installing
+-----------------------
+-Package assumes you have installed cuda in /usr/local/cuda which is default.
+-If you have installed else where you may need to edit the Makefile include path
+-cuda-sensor uses dlopen() to load its libraries. You may need to either set LD_LIBRARY_PATH
+ or update your ld.so.conf to allow a successful load of the load sensor
+-Run cuda-sensor directly and press return to confirm that it can start and detect
+ your cuda configuration.
+-running 'cuda-sensor -help' will display a script you can use to setup Grid Engine
+ for use with the cuda-sensor.
+-Add the cuda_sensor to your Grid Engine using either 'qconf -msconf' or 'qconf -msconf hostname'
+ in the following form.
+  [sd@head ~]$ qconf -sconf zorg
+  #zorg.farmotron.org:
+  mailer                       /bin/mail
+  xterm                        /usr/bin/X11/xterm
+  load_sensor                  /home/sd/gpu-load-sensor/cuda_sensor
+-Confirm that the load sensor has loaded as follows
+  sd@zorg:~$ ps axf|grep -e sge -e gpu |grep -v grep
+  11855 ?        Sl     0:02 /opt/sge/bin/lx-amd64/sge_execd
+  12067 ?        S      0:00  \_ /bin/sh -c /home/sd/gpu-load-sensor/cuda_sensor
+  12068 ?        S      0:00      \_ /home/sd/gpu-load-sensor/cuda_sensor
+-Confirm load_values are available with
+  sd@zorg:~$ qconf -se zorg
+  hostname              zorg.farmotron.org
+  load_scaling          NONE
+  complex_values        NONE
+  load_values           arch=lx-amd64,num_proc=2,mem_total=3837.156250M, \
+                        swap_total=0.000000M,virtual_total=3837.156250M, \
+                        load_avg=0.010000,load_short=0.000000, \
+                        load_medium=0.010000,load_long=0.000000, \
+                        mem_free=2526.710938M,swap_free=0.000000M, \
+                        virtual_free=2526.710938M,mem_used=1310.445312M, \
+                        swap_used=0.000000M,virtual_used=1310.445312M, \
+                        cpu=7.900000,m_topology=SCC,m_topology_inuse=SCC, \
+                        m_socket=1,m_core=2,m_thread=2,np_load_avg=0.005000, \
+                        np_load_short=0.000000,np_load_medium=0.005000, \
+                        np_load_long=0.000000,cuda.count=1,cuda.error=0, \
+                        cuda.strerror=No Error,cuda.0.name=GeForce 8200, \
+                        cuda.0.major=1,cuda.0.minor=1, \
+                        cuda.0.totalGlobalMem=131792896, \
+                        cuda.0.sharedMemPerBlock=16384,cuda.0.regsPerBlock=8192, \
+                        cuda.0.warpSize=32,cuda.0.memPitch=262144, \
+                        cuda.0.maxThreadsPerBlock=512,cuda.0.maxThreadsDim=512, \
+                        cuda.0.maxGridSize=65535,cuda.0.totalConstMem=65536, \
+                        cuda.0.clockRate=1200000,cuda.0.textureAlignment=256, \
+                        cuda.0.deviceOverlap=0,cuda.0.multiProcessorCount=1, \
+                        cuda.0.kernelExecTimeoutEnabled=1,cuda.0.integrated=1, \
+                        cuda.0.canMapHostMemory=1,cuda.0.computeNode=0
+  processors            2
+  user_lists            NONE
+  xuser_lists           NONE
+  projects              NONE
+  xprojects             NONE
+  usage_scaling         NONE
+  report_variables      NONE
+
+
+TODO
+----
+-qsub examples
+-Test against OSX
+-Add a version string, including recording it as a load value
+-It appears that cuda version number is not being expressed properly through
+ the load values
+-Add a cuda consummable value which is updated from the load sensor
+-some of the complex types need to be adjusted
+
+Platforms Tested
+----------------
+
+April 15 2011 
+MF OK on GeForce 8400GS (512MB) on Ubuntu 10.10 (Maverick) Cuda 3.2.16 
+April 15 2011 
+SD OK on GeForce 8200 (1024MB) on Ubuntu 9.10 (Karmic) Cuda 2.2 SGE 6.2u5
+April 15 2011 
+SD OK on GeForce 8200 (1024MB) on Ubuntu 10.04 (Lucid) Cuda 3.2.16 UGE 8.0.0
+
