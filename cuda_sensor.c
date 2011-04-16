@@ -117,7 +117,7 @@ int main(int argc, char** argv)
 			        printf("%s:cuda.%d.kernelExecTimeoutEnabled:%d\n",h,i,prop.kernelExecTimeoutEnabled);
 			        printf("%s:cuda.%d.integrated:%d\n",h,i,prop.integrated);
 			        printf("%s:cuda.%d.canMapHostMemory:%d\n",h,i,prop.canMapHostMemory);
-			        printf("%s:cuda.%d.computeNode:%d\n",h,i,prop.computeMode);
+			        printf("%s:cuda.%d.computeMode:%d\n",h,i,prop.computeMode);
 		            }
                 }
 			printf("end\n");
@@ -197,7 +197,7 @@ printf(
 "    add_int_load_complex cuda.$i.kernelExecTimeoutEnabled\n"
 "    add_int_load_complex cuda.$i.integrated\n"
 "    add_int_load_complex cuda.$i.canMapHostMemory\n"
-"    add_int_load_complex cuda.$i.computeNode\n"
+"    add_int_load_complex cuda.$i.computeMode\n"
 "done \n"
 );
 
