@@ -43,7 +43,11 @@ void load_cuda()
     void*handle;
     my_cudaGetDeviceCount = fake_cudaGetDeviceCount;
 	my_cudaGetDeviceProperties = fake_cudaGetDeviceProperties;
+#if __APPLE__
+    handle = dlopen("libcudart.dylib", RTLD_LAZY);
+#else
     handle = dlopen("libcudart.so", RTLD_LAZY);
+#endif
     if (!handle) 
         {
         load_error=dlerror();

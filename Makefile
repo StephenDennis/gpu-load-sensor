@@ -19,6 +19,12 @@ CFLAGS=-Wall
 INCLUDE=-I /usr/local/cuda/include
 LIB=-ldl
 
+platform := $(shell uname -s)
+
+ifeq ($(platform),Darwin)
+LIB += -Wl,-rpath,/usr/local/cuda/lib
+endif
+
 all: cuda_sensor
 
 cuda_sensor: cuda_sensor.c
