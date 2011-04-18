@@ -75,7 +75,6 @@ Building and Installing
 TODO
 ----
 -qsub examples
--Test against OSX
 -Add a version string, including recording it as a load value
 -It appears that cuda version number is not being expressed properly through
  the load values
@@ -91,4 +90,8 @@ April 15 2011
 SD OK on GeForce 8200 (1024MB) on Ubuntu 9.10 (Karmic) Cuda 2.2 SGE 6.2u5
 April 15 2011 
 SD OK on GeForce 8200 (1024MB) on Ubuntu 10.04 (Lucid) Cuda 3.2.16 UGE 8.0.0
+April 18 2011
+EmmEff OK on GeForce 9600M GT/GeForce 9400M on OSX 10.6.7 Cuda 3.2.17 
+
+
 
